@@ -5,22 +5,23 @@
 
 class NeuralNetwork;
 
-class Neurone
+class Neuron
 {
 public:
-	Neurone(NeuralNetwork* fNeuralNetwork, int fEntree);
-	Neurone(NeuralNetwork* fNeuralNetwork, int fPremiere_entree, int fDerniere_entree);
+	Neuron(NeuralNetwork* fNeuralNetwork, int fInput);
+	Neuron(NeuralNetwork* fNeuralNetwork, int fFirstInput, int fLastInput);
 
 
-	void findWeight(Pomme& fPomme, long double fSortie_voulue);
+    //void findWeight(short* fBuffer, long double fNeededOutput);
 
-	long double getSortie(Pomme& fPomme);
+    long double getOutput(short* fBuffer);
 
+    void setWeight(long double fW);
 
 
 private:
-	NeuralNetwork* m_NeuralNetwork;
+	NeuralNetwork* mNeuralNetwork;
 
-	std::list<struct_lien> m_list_lien;
+	std::list<structLink> mLinkList;
 };
 

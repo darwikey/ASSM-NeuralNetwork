@@ -1,7 +1,5 @@
 #pragma once
 
-#include "targetver.h"
-
 #include <stdio.h>
 #include <tchar.h>
 #include <math.h>
@@ -10,6 +8,8 @@
 #include <vector>
 #include <list>
 #include <utility>
+
+#define BUFFER_SIZE 1024
 
 using namespace std;
 
@@ -23,9 +23,9 @@ bool random_bool();
 
 typedef struct
 {
-	int id_entree; // négatif pour les entrées du reseau
-	long double poids;
+	int idInput; // négatif pour les entrées du reseau
+	long double weight;
 
-} struct_lien;
+} structLink;
 
 

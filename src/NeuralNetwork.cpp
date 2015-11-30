@@ -3,6 +3,7 @@
 #include "NeuralNetwork.h"
 #include "time.h"
 #include "WAV.h"
+#include <algorithm>
 
 
 
@@ -14,114 +15,91 @@ int main(int argc, char *argv[])
 
 
 	//Reseau
-	NeuralNetwork* _network = new NeuralNetwork(1000);
+	NeuralNetwork _network (BUFFER_SIZE);
+   
 
 
+	WAV _inputWav, _sampleWav;
 	
-	float _timespan = 0.2f;
-	std::vector<WAV> _retval;
-	WAV _wav;
-	_wav.Read("data/test.wav");
-	if (_wav.empty())
+    if (_inputWav.Read("data/sum41.wav") || _sampleWav.Read("data/sum41.wav"))
 	{
-		std::cout << "unable to open file" << std::endl;
 		return EXIT_FAILURE;
 	}
 
-	unsigned int _endBytePos = _wav.getSampleCount() * _wav.getChannels() * (_wav.getBit() / 8);
+    if (_inputWav.getChannels() != 1 || _sampleWav.getChannels() != 1)
+    {
+        cerr << "stereo sounds are not supported" << endl;
+        return EXIT_FAILURE;
+    }
 
-	char* _outputData = new char[_endBytePos];
+    short _sampleBuffer[BUFFER_SIZE];
+    for (int i = 0; i < BUFFER_SIZE; i++)
+    {
+        _sampleBuffer[i] = ((short*)_sampleWav.getData())[i];
+    }
 
-	for (int i = 0; i < _endBytePos; i += 1024)
+    _network.findWeight(_sampleBuffer);
+
+
+	int _endBytePos = _inputWav.getSampleCount();
+
+    const short* _inputData = (short*) _inputWav.getData();
+	short* _outputData = new short[_endBytePos];
+
+	for (int i = 0; i + BUFFER_SIZE < _endBytePos; i ++)
 	{
+        _outputData[i] = _inputData[i];
 
 
-		// envoyer dans le reseau
-		//_reseau->findWeight(*_pomme);
 	}
 
-
+    _inputWav.setData(_outputData, _inputWav.getDataSize());
+    cout << "write out.wav" << endl;
+    _inputWav.Write("out.wav");
 
 	return 0;
 }
 
 
 // Constructeur réseau de neurones
-NeuralNetwork::NeuralNetwork(int fNb_entree) : mNumInput(fNb_entree)
+NeuralNetwork::NeuralNetwork(int fNumInput) : mNumInput(fNumInput)
 {
-	mNumOutput = 3;
+	mNumOutput = 1;
 
 	//entrée
-	for (int i=0; i<=mNumInput-1; i++)
+	for (int i=0; i<mNumInput; i++)
 	{
-		Neurone* _neurone = new Neurone(this, -i-1);
-		m_tab_neurone.push_back(_neurone);
+		Neuron* _neuron = new Neuron(this, -i-1);
+		mNeuronArray.push_back(_neuron);
 	}
 
 	// sortie
-	for (int i=mNumInput; i <= mNumInput +mNumOutput -1; i++)
+	for (int i=mNumInput; i < mNumInput +mNumOutput; i++)
 	{
-		Neurone* _neurone = new Neurone(this, 0, mNumInput-1);
-		m_tab_neurone.push_back(_neurone);
+		Neuron* _neuron = new Neuron(this, 0, mNumInput-1);
+		mNeuronArray.push_back(_neuron);
 	}
-
-	//fichier
-	mFile.open("resultat.txt");
-	mFile.clear();
 }
 
 
 // Renvoie l'entrée
-long double NeuralNetwork::getEntree(int fEntree, Pomme& fPomme)
+long double NeuralNetwork::getInput(int fInput, short* fBuffer)
 {
-	if (fEntree<1000)
-		return (long double)fPomme.m_couleur[fEntree];
+	if (fInput < BUFFER_SIZE)
+		return (long double)fBuffer[fInput];
 	else
 		return 0.L;
 }
 
 
 // Calcul les poids des neurones 
-void NeuralNetwork::findWeight(Pomme& fpomme)
+void NeuralNetwork::findWeight(short* fBuffer)
 {
 	
-	Neurone* _neurone = m_tab_neurone[mNumInput];
-
-	long double _sortie = _neurone->getSortie(fpomme);
-	printf("%4.4f    ", _sortie);
-
-
-	static int _cycle = 0;
-	static int _resultat = 0;
-
-	if (fpomme.m_tachete > 0) // tacheté
-	{
-		if (_sortie > 0.5L)
-			_resultat ++; // bonne sortie
-
-	}
-	else // pas tacheté
-	{
-		if (_sortie < 0.5L)
-			_resultat ++; // bonne sortie
-
-	}
-	
-
-	// on met les resultats dans un fichier texte
-	_cycle ++;
-	if (_cycle >= 20)
-	{
-		_cycle = 0;
-
-		mFile<<_resultat<<endl;
-
-		_resultat = 0;
-	}
-
-
-	_neurone->findWeight(fpomme, (long double)fpomme.m_tachete / 4.L);
-
+    for (int i = 0; i < BUFFER_SIZE; i++)
+    {
+        mNeuronArray[i]->setWeight(fBuffer[i]);
+    }
 	
 }
 

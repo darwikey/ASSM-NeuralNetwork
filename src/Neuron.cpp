@@ -5,78 +5,87 @@
 
 
 // Pour les neurones en entrée
-Neurone::Neurone(NeuralNetwork* fNeuralNetwork, int fEntree) : m_NeuralNetwork(fNeuralNetwork)
+Neuron::Neuron(NeuralNetwork* fNeuralNetwork, int fInput) : mNeuralNetwork(fNeuralNetwork)
 {
-	struct_lien _lien;
-	_lien.id_entree = fEntree;
-	_lien.poids = 0;
+    structLink _link;
+    _link.idInput = fInput;
+    _link.weight = 0;
 
-	m_list_lien.push_back(_lien);
+    mLinkList.push_back(_link);
 }
 
 
 // Constructeur générique
-Neurone::Neurone(NeuralNetwork* fNeuralNetwork, int fPremiere_entree, int fDerniere_entree) : m_NeuralNetwork(fNeuralNetwork)
+Neuron::Neuron(NeuralNetwork* fNeuralNetwork, int fFirstInput, int fLastInput) : mNeuralNetwork(fNeuralNetwork)
 {
 	// On connecte les entrées
-	for (int i=fPremiere_entree; i<=fDerniere_entree; i++)
+	for (int i=fFirstInput; i<=fLastInput; i++)
 	{
-		struct_lien _lien;
-		_lien.id_entree = i;
+		structLink _link;
+        _link.idInput = i;
 
-		// on donne un poids aléatoire
-		_lien.poids = random(-.001L, .001L);
+		// on donne un poids 
+        _link.weight = 1.L / (fLastInput - fFirstInput);//random(-.001L, .001L);
 
-		m_list_lien.push_back(_lien);
+        mLinkList.push_back(_link);
 	}
 }
 
 
 // A partir des entrés/sorties et de la sortie voulue, on calcule les poids des entrées
-void Neurone::findWeight(Pomme& fPomme, long double fSortie_voulue)
+/*void Neuron::findWeight(short* fBuffer, long double fNeededOutput)
 {
-	long double _sortie_reel = this->getSortie(fPomme);
+	long double _realOutput = this->getOutput(fBuffer);
 	
-	for (auto it=m_list_lien.begin(); it!=m_list_lien.end(); ++it)
+	for (auto it=mLinkList.begin(); it!=mLinkList.end(); ++it)
 	{
-		Neurone* _neurone_liee = m_NeuralNetwork->m_tab_neurone[it->id_entree];
+        Neuron* _linkedNeuron = mNeuralNetwork->mNeuronArray[it->idInput];
 		
-		long double _entree = _neurone_liee->getSortie(fPomme);
+		long double _input = _linkedNeuron->getOutput(fBuffer);
 
-		const float _pas = 0.00000001L;
+		const float _step = 0.00000001L;
 
 		// compensation à ajouter
-		long double _delta = _pas * (fSortie_voulue - _sortie_reel) * _entree;
+        long double _delta = _step * (fNeededOutput - _realOutput) * _input;
 
-		it->poids += _delta;
+		it->weight += _delta;
 	}
-}
+}*/
 
 
 // Calcul la sortie du neurone
-long double Neurone::getSortie(Pomme& fPomme)
+long double Neuron::getOutput(short* fBuffer)
 {
-	if (m_list_lien.size() == 0)
+	if (mLinkList.size() == 0)
 	{
 		return 0.L;
 	}
-	else if (m_list_lien.size() == 1 && m_list_lien.front().id_entree < 0)
+	else if (mLinkList.size() == 1 && mLinkList.front().idInput < 0)
 	{
-		return m_NeuralNetwork->getEntree(-1 -m_list_lien.front().id_entree, fPomme);
+		return mNeuralNetwork->getInput(-1 -mLinkList.front().idInput, fBuffer);
 	}
 	else
 	{
 
-		long double _somme = 0;
-		for (auto it=m_list_lien.begin(); it!=m_list_lien.end(); ++it)
+		long double _sum = 0;
+		for (auto it=mLinkList.begin(); it!=mLinkList.end(); ++it)
 		{
-			Neurone* _neurone_liee = m_NeuralNetwork->m_tab_neurone[it->id_entree];
-			long double _entree = _neurone_liee->getSortie(fPomme);
+			Neuron* _Neuron_liee = mNeuralNetwork->mNeuronArray[it->idInput];
+			long double _Input = _Neuron_liee->getOutput(fBuffer);
 
-			_somme += it->poids * _entree;
+			_sum += it->weight * _Input;
 		}
 
 
-		return _somme;
+		return _sum;
 	}
+}
+
+
+void Neuron::setWeight(long double fW)
+{
+    for (auto it = mLinkList.begin(); it != mLinkList.end(); ++it)
+    {
+        it->weight = fW;
+    }
 }

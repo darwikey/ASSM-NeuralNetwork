@@ -4,25 +4,21 @@
 #include "stdafx.h"
 #include <fstream>
 
-class Pomme;
+
 
 class NeuralNetwork
 {
 public:
-	NeuralNetwork(int fNb_entree);
+	NeuralNetwork(int fNumInput);
 
 
-	long double getEntree(int fInput, Pomme& fPomme);
-	void findWeight(Pomme& fpomme);
+    long double getInput(int fInput, short* fBuffer);
+    void findWeight(short* fBuffer);
 
-	std::vector<Neurone*> m_tab_neurone;
+	std::vector<Neuron*> mNeuronArray;
 
 
 private:
 	int mNumInput;
 	int mNumOutput;
-
-
-	// fichier texte de sortie
-	ofstream mFile;
 };
