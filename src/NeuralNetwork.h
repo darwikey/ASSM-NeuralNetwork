@@ -12,8 +12,10 @@ public:
 	NeuralNetwork(int fNumInput);
 
 
-    long double getInput(int fInput, short* fBuffer);
+    REAL getInput(int fInput, short* fBuffer);
     void findWeight(short* fBuffer);
+
+    REAL test(short* fData, int fStart, int fEnd);
 
 	std::vector<Neuron*> mNeuronArray;
 

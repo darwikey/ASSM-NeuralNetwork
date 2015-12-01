@@ -8,23 +8,26 @@
 #include <vector>
 #include <list>
 #include <utility>
+#include <algorithm>
+
+#define REAL float
 
 #define BUFFER_SIZE 1024
 
 using namespace std;
 
 
-long double sigmoide(long double fInput);
-long double random (long double fMin, long double fMax);
+REAL sigmoide(REAL fInput);
+REAL random (REAL fMin, REAL fMax);
 int random (int fMin, int fMax);
-bool random_bool();
+bool randomBool();
 
 
 
 typedef struct
 {
 	int idInput; // négatif pour les entrées du reseau
-	long double weight;
+	REAL weight;
 
 } structLink;
 

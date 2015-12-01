@@ -25,7 +25,7 @@ Neuron::Neuron(NeuralNetwork* fNeuralNetwork, int fFirstInput, int fLastInput) :
         _link.idInput = i;
 
 		// on donne un poids 
-        _link.weight = 1.L / (fLastInput - fFirstInput);//random(-.001L, .001L);
+        _link.weight = ((REAL)1) / (fLastInput - fFirstInput);//random(-.001L, .001L);
 
         mLinkList.push_back(_link);
 	}
@@ -33,20 +33,20 @@ Neuron::Neuron(NeuralNetwork* fNeuralNetwork, int fFirstInput, int fLastInput) :
 
 
 // A partir des entrés/sorties et de la sortie voulue, on calcule les poids des entrées
-/*void Neuron::findWeight(short* fBuffer, long double fNeededOutput)
+/*void Neuron::findWeight(short* fBuffer, REAL fNeededOutput)
 {
-	long double _realOutput = this->getOutput(fBuffer);
+	REAL _realOutput = this->getOutput(fBuffer);
 	
 	for (auto it=mLinkList.begin(); it!=mLinkList.end(); ++it)
 	{
         Neuron* _linkedNeuron = mNeuralNetwork->mNeuronArray[it->idInput];
 		
-		long double _input = _linkedNeuron->getOutput(fBuffer);
+		REAL _input = _linkedNeuron->getOutput(fBuffer);
 
 		const float _step = 0.00000001L;
 
 		// compensation à ajouter
-        long double _delta = _step * (fNeededOutput - _realOutput) * _input;
+        REAL _delta = _step * (fNeededOutput - _realOutput) * _input;
 
 		it->weight += _delta;
 	}
@@ -54,7 +54,7 @@ Neuron::Neuron(NeuralNetwork* fNeuralNetwork, int fFirstInput, int fLastInput) :
 
 
 // Calcul la sortie du neurone
-long double Neuron::getOutput(short* fBuffer)
+REAL Neuron::getOutput(short* fBuffer)
 {
 	if (mLinkList.size() == 0)
 	{
@@ -67,11 +67,11 @@ long double Neuron::getOutput(short* fBuffer)
 	else
 	{
 
-		long double _sum = 0;
+		REAL _sum = 0;
 		for (auto it=mLinkList.begin(); it!=mLinkList.end(); ++it)
 		{
 			Neuron* _Neuron_liee = mNeuralNetwork->mNeuronArray[it->idInput];
-			long double _Input = _Neuron_liee->getOutput(fBuffer);
+			REAL _Input = _Neuron_liee->getOutput(fBuffer);
 
 			_sum += it->weight * _Input;
 		}
@@ -82,7 +82,7 @@ long double Neuron::getOutput(short* fBuffer)
 }
 
 
-void Neuron::setWeight(long double fW)
+void Neuron::setWeight(REAL fW)
 {
     for (auto it = mLinkList.begin(); it != mLinkList.end(); ++it)
     {

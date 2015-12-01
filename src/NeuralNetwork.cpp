@@ -3,7 +3,6 @@
 #include "NeuralNetwork.h"
 #include "time.h"
 #include "WAV.h"
-#include <algorithm>
 
 
 
@@ -32,6 +31,13 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
+    if (_inputWav.getBit() != 16 || _sampleWav.getBit() != 16)
+    {
+        cerr << "sounds must be 16 bits" << endl;
+        return EXIT_FAILURE;
+    }
+
+
     short _sampleBuffer[BUFFER_SIZE];
     for (int i = 0; i < BUFFER_SIZE; i++)
     {
@@ -41,19 +47,51 @@ int main(int argc, char *argv[])
     _network.findWeight(_sampleBuffer);
 
 
-	int _endBytePos = _inputWav.getSampleCount();
+    int _endBytePos = min(30000, (int)_inputWav.getSampleCount());
 
-    const short* _inputData = (short*) _inputWav.getData();
+    short* _inputData = (short*) _inputWav.getData();
 	short* _outputData = new short[_endBytePos];
+    memcpy(_outputData, _inputData, _endBytePos * sizeof(short));
 
-	for (int i = 0; i + BUFFER_SIZE < _endBytePos; i ++)
+
+	for (int i = 0; i < 1000; i ++)
 	{
-        _outputData[i] = _inputData[i];
+        if (i % 100 == 0)
+            cout << i << endl;
 
+        // ajoute d'une onde aléatoire à l'échantillon
+        int range = 1024;
+        float freq = (float) random(20, 1000);
+        int p = random(0, _endBytePos - range);
+        
+        for (int j = p; j < p + range; j++)
+        {
+            float a = (float)(j - p) / (float)_inputWav.getSampleRate();
+            _outputData[j] = (short) ((float) _outputData[j] + 1000.f * sin(a * 2.f * 3.141596f * freq));
+        }
 
+        // test avec le reseau de neurone, l'echantillon avant et après
+        REAL _score0 = _network.test(_inputData, p, p + range);
+        REAL _score1 = _network.test(_outputData, p, p + range);
+
+        // si le reseau de neurone est content
+        if (_score1 > _score0)
+        {
+            // on garde le buffer modifié
+            memcpy(_inputData, _outputData, _endBytePos * sizeof(short));
+            //cout << "OK" << endl;
+        }
+        else
+        {
+            // on ecrase le buffer modifié
+            memcpy(_outputData, _inputData, _endBytePos * sizeof(short));
+            //cout << "NOK" << endl;
+        }
 	}
 
-    _inputWav.setData(_outputData, _inputWav.getDataSize());
+    // écrit le son final
+    _inputWav.setSampleCount(_endBytePos);
+    _inputWav.setData(_outputData, _endBytePos * sizeof(short));
     cout << "write out.wav" << endl;
     _inputWav.Write("out.wav");
 
@@ -83,10 +121,10 @@ NeuralNetwork::NeuralNetwork(int fNumInput) : mNumInput(fNumInput)
 
 
 // Renvoie l'entrée
-long double NeuralNetwork::getInput(int fInput, short* fBuffer)
+REAL NeuralNetwork::getInput(int fInput, short* fBuffer)
 {
 	if (fInput < BUFFER_SIZE)
-		return (long double)fBuffer[fInput];
+		return (REAL)fBuffer[fInput];
 	else
 		return 0.L;
 }
@@ -103,4 +141,14 @@ void NeuralNetwork::findWeight(short* fBuffer)
 	
 }
 
+REAL NeuralNetwork::test(short* fData, int fStart, int fEnd)
+{
+    REAL _score = 0;
 
+    for (int i = fStart; i < fEnd; i++)
+    {
+        _score += mNeuronArray.back()->getOutput(&fData[i]);
+    }
+
+    return _score;
+}

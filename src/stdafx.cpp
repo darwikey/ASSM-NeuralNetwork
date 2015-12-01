@@ -3,19 +3,19 @@
 
 
 
-long double sigmoide(long double fInput)
+REAL sigmoide(REAL fInput)
 {
-	long double _sortie;
+	REAL _sortie;
 	_sortie = 1/ ( 1 + exp( -fInput ) );
 	
 	return _sortie;
 }
 
 
-long double random (long double fMin, long double fMax)
+REAL random (REAL fMin, REAL fMax)
 {
-	long double interval = fMax - fMin;
-	return fMin + interval * rand()/(long double)RAND_MAX;
+	REAL interval = fMax - fMin;
+	return fMin + interval * rand()/(REAL)RAND_MAX;
 }
 
 
@@ -25,10 +25,9 @@ int random (int fMin, int fMax)
 	return fMin + rand() % interval;
 }
 
-bool random_bool()
+bool randomBool()
 {
 	int a = rand();
 	a = 1 & a;
 	return a!=0;
 }
-

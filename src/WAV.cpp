@@ -1,28 +1,6 @@
 #include "WAV.h"
 
-WAV::WAV(const WAV& other)
-{
-    //init();
-    this->createHeader(other.getChannels(), other.getSampleRate(), other.getBit());
-    if (this->setData(other.getData(), other.getDataSize()) != 0)
-    {
-        printLOG("copy constructor error.");
-        exit(-1);
-    }
-}
-WAV& WAV::operator=(const WAV& other)
-{
-    if (this != &other)
-    {
-        this->createHeader(other.getChannels(), other.getSampleRate(), other.getBit());
-        if (this->setData(other.getData(), other.getDataSize()) != 0)
-        {
-            printLOG("copy operator error.");
-            exit(-1);
-        }
-    }
-    return *this;
-}
+
 int WAV::freeWAVData()
 {
     try
@@ -273,7 +251,7 @@ int WAV::Read(const char* WAVFName)
 }
 
 
-int WAV::setData(const void *data, unsigned int dataSize)
+int WAV::setData(void *data, unsigned int dataSize)
 {
     //freeWAVData(); // 初期化
     _dataSize = dataSize;
@@ -341,7 +319,7 @@ int WAV::setData(const void *data, unsigned int dataSize)
 
 }
 
-const void* WAV::getData()const
+void* WAV::getData()
 {
     if (_channels == 1)
     {

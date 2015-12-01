@@ -12,11 +12,11 @@ public:
 	Neuron(NeuralNetwork* fNeuralNetwork, int fFirstInput, int fLastInput);
 
 
-    //void findWeight(short* fBuffer, long double fNeededOutput);
+    //void findWeight(short* fBuffer, REAL fNeededOutput);
 
-    long double getOutput(short* fBuffer);
+    REAL getOutput(short* fBuffer);
 
-    void setWeight(long double fW);
+    void setWeight(REAL fW);
 
 
 private:
