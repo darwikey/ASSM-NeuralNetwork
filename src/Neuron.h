@@ -2,6 +2,7 @@
 
 
 #include "stdafx.h"
+#include "_kiss_fft_guts.h"
 
 class NeuralNetwork;
 
@@ -14,7 +15,7 @@ public:
 
     //void findWeight(short* fBuffer, REAL fNeededOutput);
 
-    REAL getOutput(short* fBuffer);
+    REAL getOutput(const std::vector<kiss_fft_cpx>& fBuffer);
 
     void setWeight(REAL fW);
 

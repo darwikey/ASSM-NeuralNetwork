@@ -54,7 +54,7 @@ Neuron::Neuron(NeuralNetwork* fNeuralNetwork, int fFirstInput, int fLastInput) :
 
 
 // Calcul la sortie du neurone
-REAL Neuron::getOutput(short* fBuffer)
+REAL Neuron::getOutput(const std::vector<kiss_fft_cpx>& fBuffer)
 {
 	if (mLinkList.size() == 0)
 	{

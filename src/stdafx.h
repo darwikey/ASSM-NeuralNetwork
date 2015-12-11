@@ -10,9 +10,10 @@
 #include <utility>
 #include <algorithm>
 
-#define REAL float
+#define REAL long double
 
 #define BUFFER_SIZE 1024
+#define GENERATOR_SIZE 100
 
 using namespace std;
 
