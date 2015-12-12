@@ -2,16 +2,6 @@
 
 
 
-
-float sigmoide(float fInput)
-{
-	float _sortie;
-	_sortie = 1/ ( 1 + exp( -fInput ) );
-	
-	return _sortie;
-}
-
-
 float random (float fMin, float fMax)
 {
 	float interval = fMax - fMin;

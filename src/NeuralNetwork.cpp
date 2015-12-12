@@ -6,7 +6,7 @@
 
 
 // Constructeur réseau de neurones
-NeuralNetwork::NeuralNetwork() : mNumInput(BUFFER_SIZE/2), mNumOutput(GENERATOR_SIZE)
+NeuralNetwork::NeuralNetwork() : mNumInput(BUFFER_SIZE/2), mNumOutput(GENERATOR_COUNT)
 {
     for (int i = 0; i < mNumOutput; i++)
     {
@@ -25,7 +25,7 @@ NeuralNetwork::NeuralNetwork() : mNumInput(BUFFER_SIZE/2), mNumOutput(GENERATOR_
 
 
 // croisement entre deux parents
-NeuralNetwork::NeuralNetwork(const NeuralNetwork* fParent1, const NeuralNetwork* fParent2) : mNumInput(BUFFER_SIZE/2), mNumOutput(GENERATOR_SIZE)
+NeuralNetwork::NeuralNetwork(const NeuralNetwork* fParent1, const NeuralNetwork* fParent2) : mNumInput(BUFFER_SIZE/2), mNumOutput(GENERATOR_COUNT)
 {
     for (int i = 0; i < mNumOutput; i++)
     {

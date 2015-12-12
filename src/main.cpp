@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
     // Charge les fichiers audio
 	WAV _inputWav, _sampleWav;
 	
-    if (_inputWav.Read("data/ellie.wav") || _sampleWav.Read("data/ellie.wav"))
+    if (_inputWav.Read("data/sum41.wav") || _sampleWav.Read("data/ellie.wav"))
 	{
         std::cerr << "unable to read file" << std::endl;
 		return EXIT_FAILURE;
@@ -53,6 +53,12 @@ int main(int argc, char *argv[])
     if (_inputWav.getBit() != 16 || _sampleWav.getBit() != 16)
     {
         std::cerr << "sounds must be 16 bits" << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    if (_inputWav.getSampleCount() < BUFFER_SIZE || _sampleWav.getSampleCount() < BUFFER_SIZE)
+    {
+        std::cerr << "sounds are too smalls" << std::endl;
         return EXIT_FAILURE;
     }
 
@@ -73,7 +79,7 @@ int main(int argc, char *argv[])
     normalizeFFT(_fftOut);
 
     // Reseaux de neruones
-    std::vector<NeuralNetwork*> _pool (200);
+    std::vector<NeuralNetwork*> _pool (POOL_SIZE);
     for (unsigned int i = 0; i < _pool.size(); i++)
     {
         NeuralNetwork* _network = new NeuralNetwork();
@@ -82,7 +88,7 @@ int main(int argc, char *argv[])
 
 
     Generator _generator;
-    std::vector<float> _generatorParam(GENERATOR_SIZE, 0.f);
+    std::vector<float> _generatorParam(GENERATOR_COUNT, 0.f);
     std::vector<kiss_fft_cpx> _outGenerator(BUFFER_SIZE);
     std::vector<kiss_fft_cpx> _fftGenerator(BUFFER_SIZE);
 
@@ -90,7 +96,7 @@ int main(int argc, char *argv[])
     //************************************************************
     // Algorithme génétique pour trouver un bon réseau de neurone 
     //************************************************************
-    for (int _generation = 0; _generation < 50; _generation++)
+    for (int _generation = 0; _generation < GENERATION_COUNT; _generation++)
 	{
         std::cout << "generation : " << _generation << std::endl;
 
@@ -141,17 +147,32 @@ int main(int argc, char *argv[])
 
     // test avec le meilleur reseau de neurone
     std::sort(_pool.begin(), _pool.end(), &NeuralNetwork::sortFct);
-    _pool[0]->run(_fftOut, _generatorParam);
 
     // genere le son
     std::vector<short> _outputData(_inputWav.getSampleCount());
-    _outGenerator.resize(_outputData.size());
-    _generator.run(_generatorParam, _outGenerator, (float) _sampleWav.getSampleRate());
-    
-    // convertit en entier 16 bits
-    for (unsigned int i = 0; i < _outputData.size(); i++)
+    std::vector<float> _previousGeneratorParam(GENERATOR_COUNT, 0.f);
+
+    for (unsigned int i = 0; i < _inputWav.getSampleCount() - BUFFER_SIZE; i += BUFFER_SIZE)
     {
-        _outputData[i] = (short)(32767.f * _outGenerator[i].r);
+        for (unsigned int j = 0; j < BUFFER_SIZE; j++)
+        {
+            _fftIn[j].r = ((short*) _inputWav.getData())[i + j] / 32767.f;
+            _fftIn[j].i = 0.f;
+        }
+
+        kiss_fft(_fftCfg, _fftIn.data(), _fftOut.data());
+        normalizeFFT(_fftOut);
+
+        _pool[0]->run(_fftOut, _generatorParam);
+
+        _generator.run(_previousGeneratorParam, _generatorParam, _outGenerator, (float) _sampleWav.getSampleRate(), i);
+        _previousGeneratorParam = _generatorParam;
+
+        // convertit en entier 16 bits
+        for (unsigned int j = 0; j < BUFFER_SIZE; j++)
+        {
+            _outputData[i + j] = (short) (32767.f * _outGenerator[j].r);
+        }
     }
 
     _inputWav.setSampleCount(_outputData.size());
@@ -159,5 +180,5 @@ int main(int argc, char *argv[])
     std::cout << "write out.wav" << std::endl;
     _inputWav.Write("out.wav");
 
-	return 0;
+	return EXIT_SUCCESS;
 }

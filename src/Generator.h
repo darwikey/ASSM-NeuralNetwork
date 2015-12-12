@@ -16,6 +16,7 @@ public:
     Generator();
 
     void run(const std::vector<float>& fParams, std::vector<kiss_fft_cpx>& fOut, float fSampleFreq);
+    void run(const std::vector<float>& fPreviousParams, const std::vector<float>& fParams, std::vector<kiss_fft_cpx>& fOut, float fSampleFreq, int fIndex);
 
     void normalize(std::vector<kiss_fft_cpx>& fBuffer);
 

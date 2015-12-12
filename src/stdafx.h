@@ -12,21 +12,13 @@
 #include "_kiss_fft_guts.h"
 
 #define BUFFER_SIZE 1024
-#define GENERATOR_SIZE 100
+#define GENERATOR_COUNT 100
+#define GENERATION_COUNT 50
+#define POOL_SIZE 200
 
 
-float sigmoide(float fInput);
 float random (float fMin, float fMax);
 int random (int fMin, int fMax);
 bool randomBool();
-
-
-
-typedef struct
-{
-	int idInput; // négatif pour les entrées du reseau
-	float weight;
-
-} structLink;
 
 

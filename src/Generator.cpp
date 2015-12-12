@@ -5,7 +5,7 @@ static const float twoPi = 6.28318530717f;
 
 Generator::Generator()
 {
-    for (int i = 0; i < GENERATOR_SIZE; i++)
+    for (int i = 0; i < GENERATOR_COUNT; i++)
     {
         GeneratorEntity g;
         // frequence et phase au hasard
@@ -53,6 +53,29 @@ void Generator::run(const std::vector<float>& fParams, std::vector<kiss_fft_cpx>
         for (unsigned int g = 0; g < fParams.size(); g++)
         {
             fOut[s].r += fParams[g] * mGenerators[g].function(mGenerators[g].phase + twoPi * mGenerators[g].freq * s / fSampleFreq);
+        }
+    }
+
+    // normalisation
+    normalize(fOut);
+}
+
+// utilisé pour générer le morceau final
+void Generator::run(const std::vector<float>& fPreviousParams, const std::vector<float>& fParams, std::vector<kiss_fft_cpx>& fOut, float fSampleFreq, int fIndex)
+{
+
+    for (unsigned int s = 0; s < fOut.size(); s++)
+    {
+        fOut[s].r = 0.f;
+        fOut[s].i = 0.f;
+        // évalue chaque generateur
+        for (unsigned int g = 0; g < fParams.size(); g++)
+        {
+            // lisse les transitions en les paramètres
+            float _factor = s / (float) (fOut.size() - 1);
+            float _ampl = (1.f - _factor) * fPreviousParams[g] + _factor * fParams[g];
+
+            fOut[s].r += _ampl * mGenerators[g].function(mGenerators[g].phase + twoPi * mGenerators[g].freq * (s + fIndex) / fSampleFreq);
         }
     }
 
