@@ -3,6 +3,13 @@
 #include "stdafx.h"
 #include "_kiss_fft_guts.h"
 
+struct GeneratorEntity
+{
+    float freq = 0.f;
+    float phase = 0.f;
+    float(*function)(float) = nullptr;
+};
+
 class Generator
 {
 public:
@@ -13,5 +20,11 @@ public:
     void normalize(std::vector<kiss_fft_cpx>& fBuffer);
 
 private:
+    static float generator0(float fValue);
+    static float generator1(float fValue);
+    static float generator2(float fValue);
+    static float generator3(float fValue);
+    static float generator4(float fValue);
 
+    std::vector<GeneratorEntity> mGenerators;
 };

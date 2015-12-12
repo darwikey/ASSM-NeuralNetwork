@@ -1,28 +1,59 @@
 #include "Generator.h"
 
+static const float pi = 3.14159265358f;
+static const float twoPi = 6.28318530717f;
 
 Generator::Generator()
 {
+    for (int i = 0; i < GENERATOR_SIZE; i++)
+    {
+        GeneratorEntity g;
+        // frequence et phase au hasard
+        g.freq = (float) (i + 1) * random(10.f, 20.f);
+        g.phase = random(0.f, twoPi);
+
+        // choisi une fonction au hasard
+        switch (random(0, 6))
+        {
+        default:
+        case 0:
+            g.function = &Generator::generator0;
+            break;
+
+        case 1:
+            g.function = &Generator::generator1;
+            break;
+
+        case 2:
+            g.function = &Generator::generator2;
+            break;
+
+        case 3:
+            g.function = &Generator::generator3;
+            break;
+
+        case 4:
+            g.function = &Generator::generator4;
+            break;
+        }
+
+        mGenerators.push_back(g);
+    }
 }
 
 
 void Generator::run(const std::vector<float>& fParams, std::vector<kiss_fft_cpx>& fOut, float fSampleFreq)
 {
-    const float twoPi = 6.28318530717;
+   
     for (unsigned int s = 0; s < fOut.size(); s++)
     {
         fOut[s].r = 0.f;
         fOut[s].i = 0.f;
+        // évalue chaque generateur
         for (unsigned int g = 0; g < fParams.size(); g++)
         {
-            float freq = (float) (g + 1) * (fmod(g * 3133.5463f, 10.f) + 10.f);
-            // phase aléatoire
-            float phase = fmod(g * 31337.85307f, twoPi);
-            fOut[s].r += fParams[g] * sin(phase + twoPi * freq * s / fSampleFreq);
+            fOut[s].r += fParams[g] * mGenerators[g].function(mGenerators[g].phase + twoPi * mGenerators[g].freq * s / fSampleFreq);
         }
-
-        
-        fOut[s].r /= (float)fParams.size();
     }
 
     // normalisation
@@ -49,4 +80,42 @@ void Generator::normalize(std::vector<kiss_fft_cpx>& fBuffer)
             fBuffer[s].r /= _max;
         }
     }
+}
+
+
+// sinus
+float Generator::generator0(float fValue)
+{
+    return sin(fValue);
+}
+
+// sinus cubique
+float Generator::generator1(float fValue)
+{
+    float a = sin(fValue);
+    return a * a * a;
+}
+
+// dent de scie
+float Generator::generator2(float fValue)
+{
+    return fmod(fValue, twoPi) / pi - 1.0f;
+}
+
+
+//triangle
+float Generator::generator3(float fValue)
+{
+    return abs(fmod(fValue, twoPi) / (pi / 2.f) - 2.0f) - 1.f;
+}
+
+// sinus écrêté
+float Generator::generator4(float fValue)
+{
+    float a = sin(fValue);
+    if (a > 0.9f)
+        a = 0.9f;
+    if (a < -0.9f)
+        a = -0.9f;
+    return a;
 }

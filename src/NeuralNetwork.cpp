@@ -6,6 +6,26 @@
 #include "Generator.h"
 
 
+void normalizeFFT(std::vector<kiss_fft_cpx>& fBuffer)
+{
+    float _max = 0.f;
+    for (unsigned int i = 0; i < BUFFER_SIZE / 2; i++)
+    {
+        fBuffer[i].r = fabs(fBuffer[i].r);
+        if (fBuffer[i].r > _max)
+        {
+            _max = fBuffer[i].r;
+        }
+    }
+    if (_max > 1e-6f)
+    {
+        for (unsigned int i = 0; i < BUFFER_SIZE / 2; i++)
+        {
+            fBuffer[i].r /= _max;
+        }
+    }
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -13,10 +33,7 @@ int main(int argc, char *argv[])
 	std::cout << "INIT" << std::endl;
 	srand((int)time(NULL));
 
-
-
-
-
+    // Charge les fichiers audio
 	WAV _inputWav, _sampleWav;
 	
     if (_inputWav.Read("data/sinus.wav") || _sampleWav.Read("data/sinus.wav"))
@@ -50,14 +67,10 @@ int main(int argc, char *argv[])
     kiss_fft_cfg _fftCfg = kiss_fft_alloc(BUFFER_SIZE, 0, 0, 0);
     std::vector<kiss_fft_cpx> _fftOut(BUFFER_SIZE);
     kiss_fft(_fftCfg, _fftIn.data(), _fftOut.data());
-    // supprime les valeurs negatives de la fft
-    for (int i = 0; i < BUFFER_SIZE; i++)
-    {
-        _fftOut[i].r = fabs(_fftOut[i].r);
-    }
+    normalizeFFT(_fftOut);
 
     // Reseaux de neruones
-    std::vector<NeuralNetwork*> _pool (100);
+    std::vector<NeuralNetwork*> _pool (200);
     for (unsigned int i = 0; i < _pool.size(); i++)
     {
         NeuralNetwork* _network = new NeuralNetwork();
@@ -70,7 +83,7 @@ int main(int argc, char *argv[])
     std::vector<kiss_fft_cpx> _outGenerator(BUFFER_SIZE);
     std::vector<kiss_fft_cpx> _fftGenerator(BUFFER_SIZE);
 
-    for (int _generation = 0; _generation < 50; _generation++)
+    for (int _generation = 0; _generation < 30; _generation++)
 	{
         cout << "generation : " << _generation << endl;
 
@@ -84,12 +97,13 @@ int main(int argc, char *argv[])
 
             // FFT du signal généré
             kiss_fft(_fftCfg, _outGenerator.data(), _fftGenerator.data());
+            normalizeFFT(_fftGenerator);
 
             // calcul la distance entre les deux FFTs
             float _distance = 0.f;
             for (unsigned int j = 0; j < BUFFER_SIZE/2; j++)
             {
-                _distance += fabs(fabs(_fftGenerator[j].r) - _fftOut[j].r);
+                _distance += fabs(_fftGenerator[j].r - _fftOut[j].r);
             }
 
             // plus le score est petit, mieux c'est
@@ -142,22 +156,18 @@ int main(int argc, char *argv[])
 
 
 // Constructeur réseau de neurones
-NeuralNetwork::NeuralNetwork() : mNumInput(BUFFER_SIZE), mNumOutput(GENERATOR_SIZE)
+NeuralNetwork::NeuralNetwork() : mNumInput(BUFFER_SIZE/2), mNumOutput(GENERATOR_SIZE)
 {
     for (int i = 0; i < mNumOutput; i++)
     {
-        std::vector<float> _weights(mNumInput);
+        std::vector<float> _weights(mNumInput, 0.f);
 
-        for (int j = 0; j < mNumInput; j++)
+        /*for (int j = 0; j < mNumInput; j++)
         {
-            float _w = random(0.f, 1.f / mNumInput);
-            if (random(0, 100) > 33)
-            {
-                _w /= 50.f;
-            }
-            _weights[j] = 0.01f / mNumInput;//_w;
-        }
-        _weights[random(0, 100)] = 1.f / mNumInput;
+
+        }*/
+        _weights[random(0, mNumInput)] = 0.2f;
+        _weights[random(0, mNumInput)] = 1.f;
 
         mNeuronArray.push_back(_weights);
     }
@@ -165,7 +175,7 @@ NeuralNetwork::NeuralNetwork() : mNumInput(BUFFER_SIZE), mNumOutput(GENERATOR_SI
 
 
 // croisement entre deux parents
-NeuralNetwork::NeuralNetwork(const NeuralNetwork* fParent1, const NeuralNetwork* fParent2) : mNumInput(BUFFER_SIZE), mNumOutput(GENERATOR_SIZE)
+NeuralNetwork::NeuralNetwork(const NeuralNetwork* fParent1, const NeuralNetwork* fParent2) : mNumInput(BUFFER_SIZE/2), mNumOutput(GENERATOR_SIZE)
 {
     for (int i = 0; i < mNumOutput; i++)
     {
@@ -195,7 +205,7 @@ void NeuralNetwork::run(const std::vector<kiss_fft_cpx>& fInput, vector<float>& 
     {
         float _out = 0.f;
 
-        for (int j = 0; j < mNumInput / 2; j++)
+        for (int j = 0; j < mNumInput; j++)
         {
             _out += mNeuronArray[i][j] * fInput[j].r;
         }
