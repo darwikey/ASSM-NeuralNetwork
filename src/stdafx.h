@@ -9,6 +9,7 @@
 #include <list>
 #include <utility>
 #include <algorithm>
+#include "_kiss_fft_guts.h"
 
 #define REAL float
 

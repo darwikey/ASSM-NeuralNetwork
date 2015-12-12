@@ -1,5 +1,4 @@
 #include "stdafx.h"
-#include "Neuron.h"
 #include "NeuralNetwork.h"
 #include "time.h"
 #include "WAV.h"
@@ -59,8 +58,7 @@ int main(int argc, char *argv[])
     std::vector<NeuralNetwork*> _pool (100);
     for (unsigned int i = 0; i < _pool.size(); i++)
     {
-        NeuralNetwork* _network = new NeuralNetwork(BUFFER_SIZE);
-        _network->findWeight();
+        NeuralNetwork* _network = new NeuralNetwork();
         _pool[i] = _network;
     }
 
@@ -98,6 +96,9 @@ int main(int argc, char *argv[])
 
         // Trie la pool dans l'ordre croissant de score
         std::sort(_pool.begin(), _pool.end(), &NeuralNetwork::sortFct);
+
+        std::cout << "best network : " << _pool[0]->mScore << std::endl;
+
 	}
 
 
@@ -127,54 +128,43 @@ int main(int argc, char *argv[])
 
 
 // Constructeur réseau de neurones
-NeuralNetwork::NeuralNetwork(int fNumInput) : mNumInput(fNumInput)
+NeuralNetwork::NeuralNetwork() : mNumInput(BUFFER_SIZE), mNumOutput(GENERATOR_SIZE)
 {
-	mNumOutput = 1;
-
-	//entrée
-	for (int i=0; i<mNumInput; i++)
-	{
-		Neuron* _neuron = new Neuron(this, -i-1);
-		mNeuronArray.push_back(_neuron);
-	}
-
-	// sortie
-	for (int i=mNumInput; i < mNumInput +mNumOutput; i++)
-	{
-		Neuron* _neuron = new Neuron(this, 0, mNumInput-1);
-		mNeuronArray.push_back(_neuron);
-	}
-}
-
-
-// Renvoie l'entrée
-REAL NeuralNetwork::getInput(int fInput, const std::vector<kiss_fft_cpx>& fBuffer)
-{
-	if (fInput < (int)fBuffer.size())
-		return (REAL)fBuffer[fInput].r;
-	else
-		return 0.L;
-}
-
-
-// Calcul les poids des neurones 
-void NeuralNetwork::findWeight()
-{
-	
-    for (int i = 0; i < BUFFER_SIZE; i++)
+    for (int i = 0; i < mNumOutput; i++)
     {
-        mNeuronArray[i]->setWeight(random(0.f, 0.1f));
+        std::vector<float> _weights(mNumInput);
+
+        for (int j = 0; j < mNumInput; j++)
+        {
+            float _w = random(0.f, 1.f / mNumInput);
+            if (random(0, 100) > 33)
+            {
+                _w /= 50.f;
+            }
+            _weights[j] = _w;
+        }
+
+        mNeuronArray.push_back(_weights);
     }
-	
 }
 
-void NeuralNetwork::run(const std::vector<kiss_fft_cpx>& fData, vector<float>& fOut)
+
+
+void NeuralNetwork::run(const std::vector<kiss_fft_cpx>& fInput, vector<float>& fOut)
 {
     for (int i = 0; i < (int)fOut.size(); i++)
     {
-        fOut[i] = mNeuronArray.back()->getOutput(fData);
+        float _out = 0.f;
+
+        for (int j = 0; j < mNumInput / 2; j++)
+        {
+            _out += mNeuronArray[i][j] * fInput[j].r;
+        }
+
+        fOut[i] = _out;
     }
 }
+
 
 bool NeuralNetwork::sortFct(const NeuralNetwork* a, const NeuralNetwork* b)
 {
