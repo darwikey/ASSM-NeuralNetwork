@@ -11,16 +11,12 @@
 #include <algorithm>
 #include "_kiss_fft_guts.h"
 
-#define REAL float
-
 #define BUFFER_SIZE 1024
 #define GENERATOR_SIZE 100
 
-using namespace std;
 
-
-REAL sigmoide(REAL fInput);
-REAL random (REAL fMin, REAL fMax);
+float sigmoide(float fInput);
+float random (float fMin, float fMax);
 int random (int fMin, int fMax);
 bool randomBool();
 
@@ -29,7 +25,7 @@ bool randomBool();
 typedef struct
 {
 	int idInput; // négatif pour les entrées du reseau
-	REAL weight;
+	float weight;
 
 } structLink;
 

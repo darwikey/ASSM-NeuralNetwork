@@ -2,7 +2,6 @@
 
 
 #include "stdafx.h"
-#include <fstream>
 
 
 
@@ -12,7 +11,7 @@ public:
 	NeuralNetwork();
     NeuralNetwork(const NeuralNetwork* fParent1, const NeuralNetwork* fParent2);
 
-    void run(const std::vector<kiss_fft_cpx>& fData, vector<float>& fOut);
+    void run(const std::vector<kiss_fft_cpx>& fData, std::vector<float>& fOut);
 
     void debug();
 

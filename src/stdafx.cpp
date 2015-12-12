@@ -3,19 +3,19 @@
 
 
 
-REAL sigmoide(REAL fInput)
+float sigmoide(float fInput)
 {
-	REAL _sortie;
+	float _sortie;
 	_sortie = 1/ ( 1 + exp( -fInput ) );
 	
 	return _sortie;
 }
 
 
-REAL random (REAL fMin, REAL fMax)
+float random (float fMin, float fMax)
 {
-	REAL interval = fMax - fMin;
-	return fMin + interval * rand()/(REAL)RAND_MAX;
+	float interval = fMax - fMin;
+	return fMin + interval * rand()/(float)RAND_MAX;
 }
 
 
