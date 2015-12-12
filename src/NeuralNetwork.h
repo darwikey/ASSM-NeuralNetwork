@@ -19,6 +19,9 @@ public:
 
 	std::vector<Neuron*> mNeuronArray;
 
+    float mScore = 0.f;
+
+    static bool sortFct(const NeuralNetwork* a, const NeuralNetwork* b);
 
 private:
 	int mNumInput;

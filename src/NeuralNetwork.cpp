@@ -50,48 +50,77 @@ int main(int argc, char *argv[])
     }
 
     // lance FFT
-    kiss_fft_cfg cfg = kiss_fft_alloc(BUFFER_SIZE, 0, 0, 0);
+    kiss_fft_cfg _fftCfg = kiss_fft_alloc(BUFFER_SIZE, 0, 0, 0);
     std::vector<kiss_fft_cpx> _fftOut(BUFFER_SIZE);
-    kiss_fft(cfg, _fftIn, _fftOut.data());
+    kiss_fft(_fftCfg, _fftIn, _fftOut.data());
 
 
-    //Reseau
-    NeuralNetwork _network(BUFFER_SIZE);
-    _network.findWeight();
+    // Reseaux de neruones
+    std::vector<NeuralNetwork*> _pool (100);
+    for (unsigned int i = 0; i < _pool.size(); i++)
+    {
+        NeuralNetwork* _network = new NeuralNetwork(BUFFER_SIZE);
+        _network->findWeight();
+        _pool[i] = _network;
+    }
 
-
-    //int _endBytePos = min(30000, (int)_inputWav.getSampleCount());
 
     Generator _generator;
     std::vector<float> _generatorParam(GENERATOR_SIZE, 0.f);
-    std::vector<float> _outGenerator(BUFFER_SIZE, 0.f);
+    std::vector<kiss_fft_cpx> _outGenerator(BUFFER_SIZE);
+    std::vector<kiss_fft_cpx> _fftGenerator(BUFFER_SIZE);
 
-	for (int i = 0; i < 1; i ++)
+    for (int _generation = 0; _generation < 1; _generation++)
 	{
-        if (i % 100 == 0)
-            cout << i << endl;
+        cout << "generation : " << _generation << endl;
 
-        // test avec le reseau de neurone
-        _network.run(_fftOut, _generatorParam);
-
-        // genere le son
-        _generator.run(_generatorParam, _outGenerator, (float) _sampleWav.getSampleRate());
-
-        // calcul la distance de hammington entre les deux sons
-        float _distance = 0.f;
-        for (unsigned int j = 0; j < BUFFER_SIZE; j++)
+        for (unsigned int i = 0; i < _pool.size(); i++)
         {
-            _distance += fabs(_outGenerator[j] - _fftIn[j].r);
+            // test avec le reseau de neurone
+            _pool[i]->run(_fftOut, _generatorParam);
+
+            // genere le son
+            _generator.run(_generatorParam, _outGenerator, (float) _sampleWav.getSampleRate());
+
+            // FFT du signal généré
+            kiss_fft(_fftCfg, _outGenerator.data(), _fftGenerator.data());
+
+            // calcul la distance entre les deux FFTs
+            float _distance = 0.f;
+            for (unsigned int j = 0; j < BUFFER_SIZE/2; j++)
+            {
+                _distance += fabs(_fftGenerator[j].r - _fftOut[j].r);
+            }
+
+            // plus le score est petit, mieux c'est
+            _pool[i]->mScore = _distance;
         }
 
-
+        // Trie la pool dans l'ordre croissant de score
+        std::sort(_pool.begin(), _pool.end(), &NeuralNetwork::sortFct);
 	}
 
+
     // écrit le son final
-    /*_inputWav.setSampleCount(_endBytePos);
-    _inputWav.setData(_outputData, _endBytePos * sizeof(short));
+
+    // test avec le meilleur reseau de neurone
+    _pool[0]->run(_fftOut, _generatorParam);
+
+    // genere le son
+    std::vector<short> _outputData(_inputWav.getSampleCount());
+    _outGenerator.resize(_outputData.size());
+    _generator.run(_generatorParam, _outGenerator, (float) _sampleWav.getSampleRate());
+    
+    // convertit en short
+    for (unsigned int i = 0; i < _outputData.size(); i++)
+    {
+        _outputData[i] = (short)(32767.f * _outGenerator[i].r);
+    }
+
+    _inputWav.setSampleCount(_outputData.size());
+    _inputWav.setData(_outputData.data(), _outputData.size() * sizeof(short));
     cout << "write out.wav" << endl;
-    _inputWav.Write("out.wav");*/
+    _inputWav.Write("out.wav");
 
 	return 0;
 }
@@ -134,7 +163,7 @@ void NeuralNetwork::findWeight()
 	
     for (int i = 0; i < BUFFER_SIZE; i++)
     {
-        mNeuronArray[i]->setWeight(random(-0.01L, 0.01L));
+        mNeuronArray[i]->setWeight(random(0.f, 0.1f));
     }
 	
 }
@@ -145,4 +174,9 @@ void NeuralNetwork::run(const std::vector<kiss_fft_cpx>& fData, vector<float>& f
     {
         fOut[i] = mNeuronArray.back()->getOutput(fData);
     }
+}
+
+bool NeuralNetwork::sortFct(const NeuralNetwork* a, const NeuralNetwork* b)
+{
+    return a->mScore < b->mScore;
 }
