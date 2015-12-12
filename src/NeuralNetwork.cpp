@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 
 	WAV _inputWav, _sampleWav;
 	
-    if (_inputWav.Read("data/triangle.wav") || _sampleWav.Read("data/triangle.wav"))
+    if (_inputWav.Read("data/sinus.wav") || _sampleWav.Read("data/sinus.wav"))
 	{
 		return EXIT_FAILURE;
 	}
@@ -39,20 +39,22 @@ int main(int argc, char *argv[])
 
 
     // init buffers
-    kiss_fft_cpx _fftIn[BUFFER_SIZE];
-    short _sampleBuffer[BUFFER_SIZE];
+    std::vector<kiss_fft_cpx> _fftIn(BUFFER_SIZE);
     for (int i = 0; i < BUFFER_SIZE; i++)
     {
-        _sampleBuffer[i] = ((short*) _sampleWav.getData())[i];
-        _fftIn[i].r = (float) _sampleBuffer[i] / 32767.f;
+        _fftIn[i].r = ((short*) _sampleWav.getData())[i] / 32767.f;
         _fftIn[i].i = 0.f;
     }
 
     // lance FFT
     kiss_fft_cfg _fftCfg = kiss_fft_alloc(BUFFER_SIZE, 0, 0, 0);
     std::vector<kiss_fft_cpx> _fftOut(BUFFER_SIZE);
-    kiss_fft(_fftCfg, _fftIn, _fftOut.data());
-
+    kiss_fft(_fftCfg, _fftIn.data(), _fftOut.data());
+    // supprime les valeurs negatives de la fft
+    for (int i = 0; i < BUFFER_SIZE; i++)
+    {
+        _fftOut[i].r = fabs(_fftOut[i].r);
+    }
 
     // Reseaux de neruones
     std::vector<NeuralNetwork*> _pool (100);
@@ -68,7 +70,7 @@ int main(int argc, char *argv[])
     std::vector<kiss_fft_cpx> _outGenerator(BUFFER_SIZE);
     std::vector<kiss_fft_cpx> _fftGenerator(BUFFER_SIZE);
 
-    for (int _generation = 0; _generation < 1; _generation++)
+    for (int _generation = 0; _generation < 50; _generation++)
 	{
         cout << "generation : " << _generation << endl;
 
@@ -87,7 +89,7 @@ int main(int argc, char *argv[])
             float _distance = 0.f;
             for (unsigned int j = 0; j < BUFFER_SIZE/2; j++)
             {
-                _distance += fabs(_fftGenerator[j].r - _fftOut[j].r);
+                _distance += fabs(fabs(_fftGenerator[j].r) - _fftOut[j].r);
             }
 
             // plus le score est petit, mieux c'est
@@ -99,12 +101,24 @@ int main(int argc, char *argv[])
 
         std::cout << "best network : " << _pool[0]->mScore << std::endl;
 
+        // croisement genetique entre les meilleurs réseaux de neurones
+        int _selection = (int)_pool.size() / 3;
+        for (int i = 0; i < _selection; i++)
+        {
+            NeuralNetwork* _nn = new NeuralNetwork(_pool[i], _pool[random(0, _selection)]);
+
+            // detruit les reseaux les plus mauvais et les remplace par des enfants
+            delete _pool[_pool.size() - 1 - i];
+            _pool[_pool.size() - 1 - i] = _nn;
+        }
 	}
 
 
     // écrit le son final
 
     // test avec le meilleur reseau de neurone
+    std::sort(_pool.begin(), _pool.end(), &NeuralNetwork::sortFct);
+    //_pool[0]->debug();
     _pool[0]->run(_fftOut, _generatorParam);
 
     // genere le son
@@ -141,13 +155,38 @@ NeuralNetwork::NeuralNetwork() : mNumInput(BUFFER_SIZE), mNumOutput(GENERATOR_SI
             {
                 _w /= 50.f;
             }
-            _weights[j] = _w;
+            _weights[j] = 0.01f / mNumInput;//_w;
         }
+        _weights[random(0, 100)] = 1.f / mNumInput;
 
         mNeuronArray.push_back(_weights);
     }
 }
 
+
+// croisement entre deux parents
+NeuralNetwork::NeuralNetwork(const NeuralNetwork* fParent1, const NeuralNetwork* fParent2) : mNumInput(BUFFER_SIZE), mNumOutput(GENERATOR_SIZE)
+{
+    for (int i = 0; i < mNumOutput; i++)
+    {
+        std::vector<float> _weights(mNumInput);
+        int _swap = random(0, mNumInput);
+
+        for (int j = 0; j < mNumInput; j++)
+        {
+            if (j < _swap)
+            {
+                _weights[j] = fParent1->mNeuronArray[i][j];
+            }
+            else
+            {
+                _weights[j] = fParent2->mNeuronArray[i][j];
+            }
+        }
+
+        mNeuronArray.push_back(_weights);
+    }
+}
 
 
 void NeuralNetwork::run(const std::vector<kiss_fft_cpx>& fInput, vector<float>& fOut)
@@ -169,4 +208,17 @@ void NeuralNetwork::run(const std::vector<kiss_fft_cpx>& fInput, vector<float>& 
 bool NeuralNetwork::sortFct(const NeuralNetwork* a, const NeuralNetwork* b)
 {
     return a->mScore < b->mScore;
+}
+
+
+void NeuralNetwork::debug()
+{
+    for (int i = 0; i < mNumOutput; i++)
+    {
+        for (int j = 0; j < mNumInput / 2; j++)
+        {
+            std::cout << (int)(mNeuronArray[i][j] * 5000.f) << " ";
+        }
+        std::cout << std::endl;
+    }
 }

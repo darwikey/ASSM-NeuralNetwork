@@ -10,11 +10,11 @@ class NeuralNetwork
 {
 public:
 	NeuralNetwork();
-
+    NeuralNetwork(const NeuralNetwork* fParent1, const NeuralNetwork* fParent2);
 
     void run(const std::vector<kiss_fft_cpx>& fData, vector<float>& fOut);
 
-	std::vector<std::vector<float>> mNeuronArray;
+    void debug();
 
     float mScore = 0.f;
 
@@ -23,4 +23,7 @@ public:
 private:
 	int mNumInput;
 	int mNumOutput;
+
+    std::vector<std::vector<float>> mNeuronArray;
+
 };
