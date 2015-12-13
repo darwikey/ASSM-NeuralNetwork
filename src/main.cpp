@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
     // Charge les fichiers audio
 	WAV _inputWav, _sampleWav;
 	
-    if (_inputWav.Read("data/sum41.wav") || _sampleWav.Read("data/ellie.wav"))
+    if (_inputWav.Read("data/sample_awolnation.wav") || _sampleWav.Read("data/sample_awolnation.wav"))
 	{
         std::cerr << "unable to read file" << std::endl;
 		return EXIT_FAILURE;
@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
 
         _pool[0]->run(_fftOut, _generatorParam);
 
-        _generator.run(_previousGeneratorParam, _generatorParam, _outGenerator, (float) _sampleWav.getSampleRate(), i);
+        _generator.run(_previousGeneratorParam, _generatorParam, _outGenerator, (float) _inputWav.getSampleRate(), i);
         _previousGeneratorParam = _generatorParam;
 
         // convertit en entier 16 bits
