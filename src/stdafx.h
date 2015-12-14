@@ -14,7 +14,7 @@
 #define BUFFER_SIZE 1024
 #define GENERATOR_COUNT 100
 #define GENERATION_COUNT 50
-#define POOL_SIZE 200
+#define POOL_SIZE 500
 
 
 float random (float fMin, float fMax);

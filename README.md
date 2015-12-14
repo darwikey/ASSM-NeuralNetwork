@@ -1,14 +1,20 @@
 # ASSM-NeuralNetwork
 
-Neural Network that assimilates one music track, and using the strengths of random maths,  
-uses the first music to create some effects on a second track.
+Ce projet utilise un reseau de neurone pour à partir de deux sons, en synthétiser un troisième.
 
-Current State :
+Le programme prend en entrée un échantillon de son et un son à traiter. La sortie réseau de neurone pilote des générateurs de sons qui ont tous des fréquences et des formes d'ondes différentes.
+Lors de l'initialisation l'échantillon permet de calibrer le réseau de neurone et celui-ci est ainsi entrainé à reproduire le son passé en entrée.
 
-- the neural network works
-- it does not do anything good though, just create annoying noise on the second track
+Ensuite on applique le deuxième son à notre réseau, en sortie on va obtenir un nouveau son.
 
-Credits
+## Utilisation
 
+
+## Implémentation
+L'apprentissage du réseau est réalisé à l'aide d'un algorithme génétique.
+
+##Credits
 - Maupeu Xavier
 - Cabon Yohann
+
+lecture/écriture fichier wav : 
