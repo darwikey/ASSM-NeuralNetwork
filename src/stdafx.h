@@ -1,7 +1,6 @@
 #pragma once
 
 #include <stdio.h>
-#include <tchar.h>
 #include <math.h>
 #include <iostream>
 #include <vector>
