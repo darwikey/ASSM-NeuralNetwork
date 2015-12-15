@@ -35,10 +35,16 @@ int main(int argc, char *argv[])
 	std::cout << "INIT" << std::endl;
 	srand((int)time(NULL));
 
+    if (argc < 3)
+    {
+        std::cerr << "not enough parameters" << std::endl << "usage : ./NeuralNetwork sample_sound.wav sound_to_process.wav  [output_sound.wav]" << std::endl;
+        return EXIT_FAILURE;
+    }
+
     // Charge les fichiers audio
 	WAV _inputWav, _sampleWav;
 	
-    if (_inputWav.Read("data/sample_awolnation.wav") || _sampleWav.Read("data/sample_awolnation.wav"))
+    if (_inputWav.Read(argv[2]) || _sampleWav.Read(argv[1]))
 	{
         std::cerr << "unable to read file" << std::endl;
 		return EXIT_FAILURE;
@@ -152,6 +158,7 @@ int main(int argc, char *argv[])
     std::vector<short> _outputData(_inputWav.getSampleCount());
     std::vector<float> _previousGeneratorParam(GENERATOR_COUNT, 0.f);
 
+    // le son est traité par morceau
     for (unsigned int i = 0; i < _inputWav.getSampleCount() - BUFFER_SIZE; i += BUFFER_SIZE)
     {
         for (unsigned int j = 0; j < BUFFER_SIZE; j++)
@@ -160,11 +167,14 @@ int main(int argc, char *argv[])
             _fftIn[j].i = 0.f;
         }
 
+        // fft
         kiss_fft(_fftCfg, _fftIn.data(), _fftOut.data());
         normalizeFFT(_fftOut);
 
+        // réseau de neurone
         _pool[0]->run(_fftOut, _generatorParam);
 
+        // générateurs
         _generator.run(_previousGeneratorParam, _generatorParam, _outGenerator, (float) _inputWav.getSampleRate(), i);
         _previousGeneratorParam = _generatorParam;
 
@@ -175,10 +185,16 @@ int main(int argc, char *argv[])
         }
     }
 
+    // écrit le son en sortie
     _inputWav.setSampleCount(_outputData.size());
     _inputWav.setData(_outputData.data(), _outputData.size() * sizeof(short));
-    std::cout << "write out.wav" << std::endl;
-    _inputWav.Write("out.wav");
+    std::string _outFile = "out.wav";
+    if (argc >= 4)
+    {
+        _outFile = argv[3];
+    }
+    std::cout << "write " << _outFile << std::endl;
+    _inputWav.Write(_outFile.c_str());
 
 	return EXIT_SUCCESS;
 }

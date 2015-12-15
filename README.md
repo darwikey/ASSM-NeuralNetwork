@@ -8,10 +8,14 @@ Lors de l'initialisation l'échantillon permet de calibrer le réseau de neurone e
 Ensuite on applique le deuxième son à notre réseau, en sortie on va obtenir un nouveau son.
 
 ## Utilisation
+usage : ./NeuralNetwork sample_sound.wav sound_to_process.wav [output_sound.wav]
+
+Les configurations du réseau et de l'algorithme génétique peuvent être faites dans le fichier src/stdafx.h
 
 
 ## Implémentation
 L'apprentissage du réseau est réalisé à l'aide d'un algorithme génétique.
+
 
 ##Credits
 - Maupeu Xavier
