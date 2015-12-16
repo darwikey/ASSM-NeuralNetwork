@@ -19,6 +19,8 @@ usage : ./NeuralNetwork sample_sound.wav sound_to_process.wav [output_sound.wav]
 
 Les configurations du réseau et de l'algorithme génétique peuvent être faites dans le fichier src/stdafx.h
 
+Le dossier data contient des échantillons de sons. Des exemples de sons synthétisés sont disponibles dans le dossier results. 
+
 
 ## Implémentation
 L'apprentissage du réseau est réalisé à l'aide d'un algorithme génétique. Au départ les neurones ont des coefficients aléatoires. A chaque génération les meilleurs réseaux sont sélectionnés et un croisement génétique est effectué. L'évaluation d'un réseau consiste à comparer la FFT de la sortie des générateurs et la FFT du signal d'entrée.
